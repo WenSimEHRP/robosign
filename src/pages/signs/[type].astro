@@ -1,0 +1,223 @@
+---
+import Layout from "../../layouts/Layout.astro";
+import SignRenderer from "../../components/SignRenderer.svelte";
+import { createTypstCompiler } from "@myriaddreamin/typst.ts";
+import { execSync } from "node:child_process";
+import path from "node:path";
+
+export function getStaticPaths() {
+    const templateFiles: Record<string, string> = import.meta.glob(
+        "/templates/*.typ",
+        {
+            query: "?raw",
+            import: "default",
+            eager: true,
+        },
+    );
+
+    return Object.entries(templateFiles).map(([filePath, content]) => {
+        const filename = filePath.split("/").pop() || "";
+        const typeName = filename.replace(".typ", "");
+        const absolutePath = path.resolve("." + filePath);
+
+        let lastUpdated = "";
+        try {
+            lastUpdated = execSync(
+                `git log -1 --format=%ai -- "${absolutePath}"`,
+            )
+                .toString()
+                .trim();
+        } catch (e) {
+            lastUpdated = new Date().toISOString();
+        }
+
+        return {
+            params: { type: typeName },
+            props: { sourceCode: content, lastUpdated },
+        };
+    });
+}
+
+const { sourceCode, lastUpdated } = Astro.props as {
+    sourceCode: string;
+    lastUpdated: string;
+};
+const { type } = Astro.params;
+const compiler = createTypstCompiler();
+await compiler.init();
+compiler.addSource("/temp.typ", sourceCode);
+const rawQueryResult = await compiler.runWithWorld(
+    { mainFilePath: "/temp.typ" },
+    async (world) => {
+        const compileResult = await world.compile({ diagnostics: "full" });
+        if (compileResult.hasError) {
+            return {
+                error: "compile_failed",
+                diagnostics: compileResult.diagnostics ?? [],
+            };
+        }
+        return await world.query({ selector: "<template_data>" });
+    },
+);
+const { fonts, authors, published, params } = rawQueryResult[0]["value"];
+---
+
+<Layout title={`${type} Sign`}>
+    <section class="mx-auto w-full max-w-7xl px-4 py-4 sm:px-6 lg:px-8 h-full">
+        <div class="grid grid-cols-1 gap-4 xl:grid-cols-2 h-full">
+            <div class="h-full border border-slate-200 bg-white p-3 sm:p-4">
+                <div class="grid grid-cols-2 overflow-y-auto gap-4">
+                    {
+                        (
+                            Object.entries(params) as [
+                                string,
+                                {
+                                    type: string;
+                                    default?: string | number | boolean;
+                                    options?: string[];
+                                },
+                            ][]
+                        ).map(([key, value]) => {
+                            const defaultValue = value.default ?? "";
+
+                            // TODO: handle more data types and options
+                            // TODO: handle enums
+
+                            return (
+                                <div class="mb-1">
+                                    <h3 class="font-bold tracking-wide uppercase text-xs text-slate-400">
+                                        {key}
+                                    </h3>
+                                    {value.type === "string" ? (
+                                        <input
+                                            id={key}
+                                            type="text"
+                                            value={String(defaultValue)}
+                                            class="mt-1 w-full border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 focus:border-slate-500 focus:outline-none"
+                                        />
+                                    ) : (
+                                        <span class="text-sm text-slate-500 italic">
+                                            Unsupported parameter type:{" "}
+                                            {value.type}
+                                        </span>
+                                    )}
+                                </div>
+                            );
+                        })
+                    }
+                </div>
+            </div>
+
+            <section class="space-y-4 h-full align-middle">
+                <main class="border border-slate-200 bg-white">
+                    <SignRenderer
+                        signTitle={type}
+                        signSource={sourceCode}
+                        signParams={params}
+                        signFonts={fonts}
+                        client:only="svelte"
+                    />
+                </main>
+
+                <div class="grid grid-cols-1 gap-4">
+                    <aside class="border border-slate-200 bg-white p-4 sm:p-6">
+                        <div class="flex flex-col sm:flex-row gap-8 sm:gap-12">
+                            <section class="flex-1">
+                                <h2
+                                    class="text-xs font-bold uppercase tracking-widest text-slate-400"
+                                >
+                                    Metadata
+                                </h2>
+                                <dl class="mt-4 space-y-4 text-sm">
+                                    <div>
+                                        <dt
+                                            class="text-[10px] uppercase font-medium text-slate-500"
+                                        >
+                                            Published
+                                        </dt>
+                                        <dd
+                                            class="mt-0.5 text-slate-900 font-medium"
+                                        >
+                                            {
+                                                new Date(
+                                                    published,
+                                                ).toLocaleDateString()
+                                            }
+                                        </dd>
+                                    </div>
+                                    <div>
+                                        <dt
+                                            class="text-[10px] uppercase font-medium text-slate-500"
+                                        >
+                                            Last Updated
+                                        </dt>
+                                        <dd
+                                            class="mt-0.5 text-slate-900 font-medium"
+                                        >
+                                            {
+                                                new Date(
+                                                    lastUpdated,
+                                                ).toLocaleDateString()
+                                            }
+                                        </dd>
+                                    </div>
+                                </dl>
+                            </section>
+
+                            <section class="flex-1">
+                                <h2
+                                    class="text-xs font-bold uppercase tracking-widest text-slate-400"
+                                >
+                                    Authors
+                                </h2>
+                                <div class="mt-4">
+                                    {
+                                        authors.length > 0 ? (
+                                            <ul class="space-y-2">
+                                                {authors.map(
+                                                    (author: {
+                                                        name: string;
+                                                        ref?: string;
+                                                    }) => (
+                                                        <li>
+                                                            {author.ref ? (
+                                                                /* Link Version */
+                                                                <a
+                                                                    href={
+                                                                        author.ref
+                                                                    }
+                                                                    target="_blank"
+                                                                    rel="noopener noreferrer"
+                                                                    class="inline-flex items-center text-sm font-medium underline underline-offset-4 text-slate-600 hover:text-slate-800 transition-colors"
+                                                                >
+                                                                    {
+                                                                        author.name
+                                                                    }
+                                                                </a>
+                                                            ) : (
+                                                                /* Text Version */
+                                                                <span class="text-sm font-medium text-slate-600">
+                                                                    {
+                                                                        author.name
+                                                                    }
+                                                                </span>
+                                                            )}
+                                                        </li>
+                                                    ),
+                                                )}
+                                            </ul>
+                                        ) : (
+                                            <p class="text-sm text-slate-500 italic">
+                                                No author metadata.
+                                            </p>
+                                        )
+                                    }
+                                </div>
+                            </section>
+                        </div>
+                    </aside>
+                </div>
+            </section>
+        </div>
+    </section>
+</Layout>

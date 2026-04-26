@@ -1,0 +1,106 @@
+---
+interface Props {
+    signTypes: { id: string }[];
+}
+const { signTypes = [] } = Astro.props;
+---
+
+<input id="sidebar-toggle" class="sidebar-toggle" type="checkbox" />
+
+<label for="sidebar-toggle" class="sidebar-grip" aria-label="Toggle Sidebar">
+    <span class="grip-icon"></span>
+</label>
+
+<div class="layout">
+    <aside id="sidebar" class="sidebar">
+        <div class="sidebar-content p-4">
+            <h2 class="text-xl font-bold mb-4">Catalogue</h2>
+            <ul>
+                {
+                    signTypes.map((sign) => (
+                        <li>
+                            <a
+                                href={`/signs/${sign.id}`}
+                                class="block py-2 px-3 rounded hover:bg-gray-200 transition-colors capitalize"
+                            >
+                                {sign.id.replace(/-/g, ' ')}
+                            </a>
+                        </li>
+                    ))
+                }
+            </ul>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <slot />
+    </main>
+</div>
+
+<style>
+    :root {
+        --sidebar-width: 260px;
+        --grip-width: 28px;
+        --transition-speed: 0.2s;
+    }
+
+    .sidebar-toggle {
+        display: none;
+    }
+
+    .sidebar {
+        position: fixed;
+        top: 0;
+        left: 0;
+        bottom: 0;
+        width: var(--sidebar-width);
+        background: #fdfdfd;
+        border-right: 1px solid #e5e5e5;
+        z-index: 100;
+        transform: translateX(-100%);
+        transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+    }
+
+    .sidebar-grip {
+        position: fixed;
+        top: 50%;
+        left: 0;
+        transform: translateY(-50%);
+        width: var(--grip-width);
+        height: 60px;
+        background: #fdfdfd;
+        border: 1px solid #e5e5e5;
+        border-left: none;
+        border-radius: 0 8px 8px 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 101;
+        transition: left var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .grip-icon::before {
+        content: "⋮";
+        font-weight: bold;
+        color: #999;
+    }
+
+    .main-content {
+        width: 100%;
+        padding: 2rem;
+        transition: padding-left var(--transition-speed) ease;
+    }
+    .sidebar-toggle:checked ~ .layout .sidebar {
+        transform: translateX(0);
+    }
+    .sidebar-toggle:checked ~ .sidebar-grip {
+        left: var(--sidebar-width);
+    }
+    @media (min-width: 1024px) {
+        .sidebar-toggle:checked ~ .layout .main-content {
+            padding-left: calc(var(--sidebar-width) + 2rem);
+        }
+    }
+</style>

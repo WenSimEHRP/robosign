@@ -1,0 +1,49 @@
+name: Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  build-action:
+    name: Build Action
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6.0.2
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install p7zip and download fonts
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y p7zip-full
+          ./download_fonts.mjs
+
+      - name: Build site
+        run: |
+          bun install --frozen-lockfile
+          bun run build
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './dist'
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          personal_token: ${{ secrets.PERSONAL_TOKEN }}
+          external_repository: WenSimEHRP/Paiagram-Archive
+          user_name: github-actions[bot]
+          user_email: 41898282+github-actions[bot]@users.noreply.github.com
+          publish_branch: main
+          publish_dir: ./dist
+          destination_dir: robosign
