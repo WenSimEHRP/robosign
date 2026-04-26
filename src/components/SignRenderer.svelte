@@ -412,19 +412,19 @@
     }
 </script>
 
-<div class="flex w-full flex-col items-center justify-center bg-white">
+<div class="flex w-full flex-col items-center justify-center bg-(--app-surface-strong) text-(--app-fg)">
     <div
-        class="sticky top-0 z-20 flex w-full items-center justify-between border-b border-slate-200 bg-white/95 px-4 py-2 backdrop-blur-sm sm:px-6"
+        class="sticky top-0 z-20 flex w-full flex-col gap-2 border-b border-(--app-border) bg-(--app-surface) px-3 py-3 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-2"
     >
         <div
-            class="text-xs font-semibold uppercase tracking-[0.22em] text-slate-500"
+            class="text-center text-xs font-semibold uppercase tracking-[0.22em] text-(--app-muted-fg) sm:text-left"
         >
             {signTitle}
         </div>
-        <div class="flex items-center gap-1.5">
+        <div class="flex w-full flex-wrap gap-1.5 sm:w-auto sm:justify-end">
             <button
                 type="button"
-                class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold border border-slate-200 bg-white text-slate-900 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
+                class="inline-flex flex-1 items-center justify-center border border-(--app-border) bg-(--app-surface-strong) px-4 py-2 text-sm font-semibold text-(--app-fg) transition-all hover:border-(--app-muted) hover:bg-(--app-surface) active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-(--app-surface) sm:flex-none"
                 on:click={() => handleExport("svg")}
                 disabled={loading || error !== null || exportBusy}
             >
@@ -432,7 +432,7 @@
             </button>
             <button
                 type="button"
-                class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold border border-slate-200 bg-white text-slate-900 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
+                class="inline-flex flex-1 items-center justify-center border border-(--app-border) bg-(--app-surface-strong) px-4 py-2 text-sm font-semibold text-(--app-fg) transition-all hover:border-(--app-muted) hover:bg-(--app-surface) active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-(--app-surface) sm:flex-none"
                 on:click={() => handleExport("png")}
                 disabled={loading || error !== null || exportBusy}
             >
@@ -440,7 +440,7 @@
             </button>
             <button
                 type="button"
-                class="inline-flex items-center justify-center px-4 py-2 text-sm font-semibold border border-slate-200 bg-white text-slate-900 transition-all hover:bg-slate-50 hover:border-slate-300 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-slate-100"
+                class="inline-flex flex-1 items-center justify-center border border-(--app-border) bg-(--app-surface-strong) px-4 py-2 text-sm font-semibold text-(--app-fg) transition-all hover:border-(--app-muted) hover:bg-(--app-surface) active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 disabled:bg-(--app-surface) sm:flex-none"
                 on:click={() => handleExport("pdf")}
                 disabled={loading || error !== null || exportBusy}
             >
@@ -450,9 +450,9 @@
     </div>
 
     {#if loading}
-        <div class="text-lg text-zinc-600">Loading template...</div>
+        <div class="text-lg text-(--app-muted-fg)">Loading template...</div>
     {:else if error}
-        <div class="text-lg text-red-500">Failed to load sign: {error}</div>
+        <div class="text-lg text-red-500 dark:text-red-400">Failed to load sign: {error}</div>
     {/if}
 
     <div

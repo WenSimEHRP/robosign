@@ -1,5 +1,29 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: light dark;
+  --app-bg: #fafafa;
+  --app-fg: #18181b;
+  --app-surface: rgba(255, 255, 255, 0.92);
+  --app-surface-strong: #ffffff;
+  --app-border: #e4e4e7;
+  --app-muted: #71717a;
+  --app-muted-fg: #52525b;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --app-bg: #09090b;
+    --app-fg: #f4f4f5;
+    --app-surface: rgba(24, 24, 27, 0.92);
+    --app-surface-strong: #18181b;
+    --app-border: #27272a;
+    --app-muted: #a1a1aa;
+    --app-muted-fg: #a1a1aa;
+  }
+}
+
 body {
-  @apply bg-zinc-50 text-zinc-900;
+  background-color: var(--app-bg);
+  color: var(--app-fg);
 }

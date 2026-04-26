@@ -11,35 +11,29 @@ const { signTypes = [] } = Astro.props;
     <span class="grip-icon"></span>
 </label>
 
-<div class="layout">
-    <aside id="sidebar" class="sidebar">
-        <div class="sidebar-content p-4">
-            <h2 class="text-xl font-bold mb-4">Catalogue</h2>
-            <ul>
-                {
-                    signTypes.map((sign) => (
-                        <li>
-                            <a
-                                href={`${import.meta.env.BASE_URL}/signs/${sign.id}`}
-                                class="block py-2 px-3 rounded hover:bg-gray-200 transition-colors capitalize"
-                            >
-                                {sign.id.replace(/-/g, ' ')}
-                            </a>
-                        </li>
-                    ))
-                }
-            </ul>
-        </div>
-    </aside>
-
-    <main class="main-content">
-        <slot />
-    </main>
-</div>
+<aside id="sidebar" class="sidebar">
+    <div class="sidebar-content p-3 sm:p-4">
+        <h2 class="mb-3 text-lg font-bold sm:mb-4 sm:text-xl">Catalogue</h2>
+        <ul>
+            {
+                signTypes.map((sign) => (
+                    <li>
+                        <a
+                            href={`${import.meta.env.BASE_URL}/signs/${sign.id}`}
+                            class="block rounded px-3 py-2 capitalize transition-colors hover:bg-zinc-200 dark:hover:bg-zinc-800 sm:py-2.5"
+                        >
+                            {sign.id.replace(/-/g, ' ')}
+                        </a>
+                    </li>
+                ))
+            }
+        </ul>
+    </div>
+</aside>
 
 <style>
     :root {
-        --sidebar-width: 260px;
+        --sidebar-width: min(82vw, 260px);
         --grip-width: 28px;
         --transition-speed: 0.2s;
     }
@@ -53,13 +47,23 @@ const { signTypes = [] } = Astro.props;
         top: 0;
         left: 0;
         bottom: 0;
-        width: var(--sidebar-width);
-        background: #fdfdfd;
-        border-right: 1px solid #e5e5e5;
+        flex: 0 0 auto;
+        width: 0;
+        min-height: 100vh;
+        background: var(--app-surface-strong);
+        border-right: 1px solid var(--app-border);
+        overflow: hidden;
         z-index: 100;
+        transition: width var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.08);
+    }
+
+    .sidebar-content {
+        width: var(--sidebar-width);
+        height: 100%;
         transform: translateX(-100%);
         transition: transform var(--transition-speed) cubic-bezier(0.4, 0, 0.2, 1);
-        box-shadow: 2px 0 10px rgba(0,0,0,0.05);
+        will-change: transform;
     }
 
     .sidebar-grip {
@@ -69,8 +73,8 @@ const { signTypes = [] } = Astro.props;
         transform: translateY(-50%);
         width: var(--grip-width);
         height: 60px;
-        background: #fdfdfd;
-        border: 1px solid #e5e5e5;
+        background: var(--app-surface-strong);
+        border: 1px solid var(--app-border);
         border-left: none;
         border-radius: 0 8px 8px 0;
         display: flex;
@@ -84,23 +88,25 @@ const { signTypes = [] } = Astro.props;
     .grip-icon::before {
         content: "⋮";
         font-weight: bold;
-        color: #999;
+        color: var(--app-muted);
     }
 
-    .main-content {
-        width: 100%;
-        padding: 2rem;
-        transition: padding-left var(--transition-speed) ease;
+    .sidebar-toggle:checked ~ .sidebar {
+        width: var(--sidebar-width);
     }
-    .sidebar-toggle:checked ~ .layout .sidebar {
+    .sidebar-toggle:checked ~ .sidebar .sidebar-content {
         transform: translateX(0);
     }
     .sidebar-toggle:checked ~ .sidebar-grip {
         left: var(--sidebar-width);
     }
+
     @media (min-width: 1024px) {
-        .sidebar-toggle:checked ~ .layout .main-content {
-            padding-left: calc(var(--sidebar-width) + 2rem);
+        .sidebar {
+            position: relative;
+            top: auto;
+            left: auto;
+            bottom: auto;
         }
     }
 </style>
