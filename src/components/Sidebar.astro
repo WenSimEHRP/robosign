@@ -20,7 +20,7 @@ const { signTypes = [] } = Astro.props;
                     signTypes.map((sign) => (
                         <li>
                             <a
-                                href={`${import.meta.env.BASE_URL}signs/${sign.id}`}
+                                href={`${import.meta.env.BASE_URL}/signs/${sign.id}`}
                                 class="block py-2 px-3 rounded hover:bg-gray-200 transition-colors capitalize"
                             >
                                 {sign.id.replace(/-/g, ' ')}
