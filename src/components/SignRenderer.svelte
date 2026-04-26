@@ -6,8 +6,13 @@
     } from "@myriaddreamin/typst.ts/dist/esm/compiler.mjs";
     import { createTypstRenderer } from "@myriaddreamin/typst.ts/dist/esm/renderer.mjs";
     import { TypstSnippet } from "@myriaddreamin/typst.ts/dist/esm/contrib/snippet.mjs";
-    import compilerWasmUrl from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?url";
-    import rendererWasmUrl from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
+    // Those files won't fit in cloudflare's 25mib limit
+    // import compilerWasmUrl from "@myriaddreamin/typst-ts-web-compiler/pkg/typst_ts_web_compiler_bg.wasm?url";
+    // import rendererWasmUrl from "@myriaddreamin/typst-ts-renderer/pkg/typst_ts_renderer_bg.wasm?url";
+    const compilerWasmUrl =
+        "https://unpkg.com/@myriaddreamin/typst-ts-web-compiler@0.7.0-rc2/pkg/typst_ts_web_compiler_bg.wasm";
+    const rendererWasmUrl =
+        "https://unpkg.com/@myriaddreamin/typst-ts-renderer@0.7.0-rc2/pkg/typst_ts_renderer_bg.wasm";
     import { resolveFontFiles } from "../utils/FontMap";
 
     export let signTitle: string;
