@@ -12,6 +12,6 @@ export default defineConfig({
         plugins: [tailwindcss()]
     },
     site: 'https://paiagram.com',
-    base: '/robosigns',
+    base: '/robosign',
     output: 'static',
 });
