@@ -33,9 +33,10 @@
 #set page(
   width: 10in,
   height: 3in,
+  fill: white,
 )
 
-#set text(size: .3in, lang: "en")
+#set text(size: .3in, lang: "en", font: "Fira Sans")
 
 #place(top + center)[
   This is the minimal template

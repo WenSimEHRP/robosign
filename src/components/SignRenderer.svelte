@@ -17,10 +17,11 @@
 
     export let signTitle: string;
     export let signSource: string;
+    export let signAssets: Record<string, string> = {};
     export let signParams: Record<string, any>;
     export let signFonts: string[] = [];
 
-    const fontPaths = import.meta.glob("/public/fonts/*.otf", {
+    const fontPaths = import.meta.glob("/public/fonts/*.{otf,ttf}", {
         query: "?url",
         import: "default",
     });
@@ -106,6 +107,9 @@
         try {
             error = null;
             activeCompiler.addSource("/main.typ", signSource);
+            for (const [assetPath, assetData] of Object.entries(signAssets)) {
+                activeCompiler.addSource(`/${assetPath}`, assetData);
+            }
 
             const svgStr = await activeCompiler.runWithWorld(
                 {

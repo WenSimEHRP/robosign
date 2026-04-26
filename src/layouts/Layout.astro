@@ -9,7 +9,7 @@ interface Props {
 
 const { title } = Astro.props;
 
-const templateFiles = import.meta.glob("/templates/*.typ", {
+const templateFiles = import.meta.glob("/templates/**/*.typ", {
     query: "?raw",
     import: "default",
     eager: true,

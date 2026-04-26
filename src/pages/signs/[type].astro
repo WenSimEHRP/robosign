@@ -3,11 +3,13 @@ import Layout from "../../layouts/Layout.astro";
 import SignRenderer from "../../components/SignRenderer.svelte";
 import { createTypstCompiler } from "@myriaddreamin/typst.ts";
 import { execSync } from "node:child_process";
+import { MemoryAccessModel } from "@myriaddreamin/typst.ts/fs/memory";
 import path from "node:path";
+import { withAccessModel } from "@myriaddreamin/typst.ts/dist/esm/options.init.mjs";
 
 export function getStaticPaths() {
     const templateFiles: Record<string, string> = import.meta.glob(
-        "/templates/*.typ",
+        "/templates/**/*.typ",
         {
             query: "?raw",
             import: "default",
@@ -16,7 +18,41 @@ export function getStaticPaths() {
     );
 
     return Object.entries(templateFiles).map(([filePath, content]) => {
-        const filename = filePath.split("/").pop() || "";
+        const filename = path.basename(filePath);
+        const fileDirectory = path.dirname(filePath);
+
+        // Fetch all files in the same directory
+        const rawAssetFiles: Record<string, string> = import.meta.glob(
+            "/templates/**/*",
+            {
+                query: "?raw",
+                import: "default",
+                eager: true,
+            },
+        );
+
+        const relatedAssetFiles = Object.entries(rawAssetFiles)
+            .filter(([assetPath]) => {
+                return (
+                    path.dirname(assetPath) === fileDirectory &&
+                    assetPath !== filePath &&
+                    path.dirname(assetPath) !== "/templates"
+                );
+            })
+            .reduce(
+                (acc, [assetPath, assetContent]) => {
+                    const relativeAssetPath = path.relative(
+                        fileDirectory,
+                        assetPath,
+                    );
+                    acc[relativeAssetPath] = assetContent;
+                    return acc;
+                },
+                {} as Record<string, string>,
+            );
+
+        // Filter for assets in the current directory and sanitize the keys
+
         const typeName = filename.replace(".typ", "");
         const absolutePath = path.resolve("." + filePath);
 
@@ -33,21 +69,29 @@ export function getStaticPaths() {
 
         return {
             params: { type: typeName },
-            props: { sourceCode: content, lastUpdated },
+            props: {
+                sourceCode: content,
+                lastUpdated,
+                assets: relatedAssetFiles,
+            },
         };
     });
 }
 
-const { sourceCode, lastUpdated } = Astro.props as {
-    sourceCode: string;
-    lastUpdated: string;
-};
+const { sourceCode, lastUpdated, assets } = Astro.props;
 const { type } = Astro.params;
 const compiler = createTypstCompiler();
-await compiler.init();
+const accessModel = new MemoryAccessModel();
+await compiler.init({
+    beforeBuild: [withAccessModel(accessModel)],
+});
 compiler.addSource("/temp.typ", sourceCode);
+for (const [assetPath, assetData] of Object.entries(assets)) {
+    console.log(`Mapping asset: ${assetPath}`);
+    compiler.addSource(`/${assetPath}`, assetData);
+}
 const rawQueryResult = await compiler.runWithWorld(
-    { mainFilePath: "/temp.typ" },
+    { mainFilePath: "/temp.typ", root: "/" },
     async (world) => {
         const compileResult = await world.compile({ diagnostics: "full" });
         if (compileResult.hasError) {
@@ -63,10 +107,16 @@ const { fonts, authors, published, params } = rawQueryResult[0]["value"];
 ---
 
 <Layout title={`${type} Sign`}>
-    <section class="mx-auto h-full w-full max-w-7xl px-3 py-3 sm:px-6 lg:px-8 sm:py-4">
+    <section
+        class="mx-auto h-full w-full max-w-7xl px-3 py-3 sm:px-6 lg:px-8 sm:py-4"
+    >
         <div class="grid h-full grid-cols-1 gap-3 xl:grid-cols-2 sm:gap-4">
-            <div class="h-full border border-(--app-border) bg-(--app-surface-strong) p-3 sm:p-4">
-                <div class="grid grid-cols-1 gap-4 overflow-y-auto sm:grid-cols-2">
+            <div
+                class="h-full border border-(--app-border) bg-(--app-surface-strong) p-3 sm:p-4"
+            >
+                <div
+                    class="grid grid-cols-1 gap-4 overflow-y-auto sm:grid-cols-2"
+                >
                     {
                         (
                             Object.entries(params) as [
@@ -109,18 +159,23 @@ const { fonts, authors, published, params } = rawQueryResult[0]["value"];
             </div>
 
             <section class="h-full space-y-3 align-middle sm:space-y-4">
-                <main class="border border-(--app-border) bg-(--app-surface-strong)">
+                <main
+                    class="border border-(--app-border) bg-(--app-surface-strong)"
+                >
                     <SignRenderer
                         signTitle={type}
                         signSource={sourceCode}
                         signParams={params}
                         signFonts={fonts}
+                        signAssets={assets}
                         client:only="svelte"
                     />
                 </main>
 
                 <div class="grid grid-cols-1 gap-4">
-                    <aside class="border border-(--app-border) bg-(--app-surface-strong) p-4 sm:p-6">
+                    <aside
+                        class="border border-(--app-border) bg-(--app-surface-strong) p-4 sm:p-6"
+                    >
                         <div class="flex flex-col gap-6 sm:flex-row sm:gap-12">
                             <section class="flex-1">
                                 <h2
