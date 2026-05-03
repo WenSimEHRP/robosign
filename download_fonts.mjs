@@ -6,6 +6,7 @@ import { $ } from "bun";
 
 const paths = [
     "https://github.com/notofonts/noto-cjk/releases/download/Sans2.004/05_NotoSansCJK-SubsetOTF.zip",
+    "https://github.com/notofonts/noto-cjk/releases/download/Serif2.003/06_NotoSerifCJKSubsetOTF.zip",
     "https://github.com/WenSimEHRP/robosign/releases/download/fonts/Fira_Sans.zip"
 ];
 

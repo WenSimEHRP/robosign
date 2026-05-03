@@ -20,6 +20,18 @@ const map: Record<string, string[]> = {
   ),
   "noto sans cjk kr": notoVariations.map(
     (weight) => `NotoSansKR-${weight}.otf`,
+    ),
+  "noto serif sc": notoVariations.map(
+    (weight) => `NotoSerifSC-${weight}.otf`,
+  ),
+  "noto serif tc": notoVariations.map(
+    (weight) => `NotoSerifTC-${weight}.otf`,
+  ),
+  "noto serif jp": notoVariations.map(
+    (weight) => `NotoSerifJP-${weight}.otf`,
+  ),
+  "noto serif kr": notoVariations.map(
+    (weight) => `NotoSerifKR-${weight}.otf`,
   ),
   "fira sans": [
     "FiraSans-Black.ttf",
