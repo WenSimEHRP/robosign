@@ -35,7 +35,7 @@
     (name: "Jeremy Gao", ref: "https://paiagram.com"),
   ),
   params: required-params,
-  published: "2026-04-25",
+  published: "2026-05-03",
 )) <template_data>
 
 #let params = {
