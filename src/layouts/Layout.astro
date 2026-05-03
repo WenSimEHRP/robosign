@@ -34,14 +34,36 @@ const signTypes = Object.keys(templateFiles).map((path) => {
             data-website-id="067cd05f-b395-4813-916c-2063c383685f"></script>
         <title>{title} | Robosign</title>
     </head>
-    <body>
-        <div class="flex min-h-screen w-full">
+    <body class="flex h-screen flex-col overflow-hidden">
+        <div class="flex flex-1 overflow-hidden">
             <Sidebar signTypes={signTypes} />
-            <main class="flex flex-1 flex-col overflow-hidden">
-                <div class="flex-1 overflow-y-auto px-1 py-1 sm:px-6 sm:py-6 lg:p-8">
-                    <slot />
-                </div>
+
+            <main
+                class="flex-1 overflow-y-auto px-1 py-1 sm:px-6 sm:py-6 lg:p-8"
+            >
+                <slot />
             </main>
         </div>
+
+        <footer
+            class="shrink-0 bg-(--app-surface) border-t border-(--app-border) p-4 text-sm text-(--app-muted-fg)"
+        >
+            &copy; {new Date().getFullYear()}
+            <a
+                href="https://paiagram.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="hover:text-(--app-fg) hover:underline transition-all"
+                >Paiagram.com</a
+            >. All rights reserved.
+            <a
+                class="text-(--app-muted-fg) hover:text-(--app-fg) hover:underline transition-all"
+                href="https://github.com/wensimehrp/robosign"
+                target="_blank"
+                rel="noopener noreferrer"
+            >
+                Source
+            </a>
+        </footer>
     </body>
 </html>
