@@ -6,6 +6,8 @@ import { execSync } from "node:child_process";
 import { MemoryAccessModel } from "@myriaddreamin/typst.ts/fs/memory";
 import path from "node:path";
 import { withAccessModel } from "@myriaddreamin/typst.ts/dist/esm/options.init.mjs";
+import SimpleBox from "../../components/SimpleBox.astro";
+import ParamField from "../../components/ParamField.astro";
 
 export function getStaticPaths() {
     const templateFiles: Record<string, string> = import.meta.glob(
@@ -103,176 +105,84 @@ const rawQueryResult = await compiler.runWithWorld(
         return await world.query({ selector: "<template_data>" });
     },
 );
+
+
+interface AuthorData {
+    name: string;
+    ref?: string;
+}
+
 const { fonts, authors, published, params } = rawQueryResult[0]["value"];
 ---
 
-<Layout title={`${type} Sign`}>
-    <section
-        class="mx-auto h-min w-full max-w-7xl px-3 py-3 sm:px-6 lg:px-8 sm:py-4"
+<Layout
+    title={`${type} Sign`}
+    class="mx-auto h-min grid grid-cols-1 md:grid-cols-2 gap-4 max-w-7xl"
+>
+    <!-- parameters -->
+    <SimpleBox class="grid grid-cols-1 lg:grid-cols-2 gap-4 h-min p-4"
+        ><ParamField params={params} /></SimpleBox
     >
-        <div class="grid h-min grid-cols-1 gap-3 xl:grid-cols-2 sm:gap-4">
-            <div
-                class="h-min border border-(--app-border) bg-(--app-surface-strong) p-3 sm:p-4"
-            >
-                <div
-                    class="grid grid-cols-1 gap-4 overflow-y-auto sm:grid-cols-2"
+
+    <div class="h-min flex flex-col gap-4">
+        <!-- preview -->
+        <SimpleBox
+            ><SignRenderer
+                signTitle={type}
+                signSource={sourceCode}
+                signParams={params}
+                signFonts={fonts}
+                signAssets={assets}
+                client:only="svelte"
+            /></SimpleBox
+        >
+
+        <!-- metadata -->
+        <SimpleBox class="md:col-start-2 p-4 h-min grid gap-4 grid-cols-2">
+            {
+                [
+                    { label: "Published", value: published },
+                    { label: "Last Updated", value: lastUpdated },
+                ].map(({ label, value }) => (
+                    <div>
+                        <h3 class="font-bold tracking-wide uppercase text-xs text-(--app-muted) h-min">
+                            {label}
+                        </h3>
+                        <span class="text-sm text-(--app-fg)">
+                            {new Date(value).toLocaleString()}
+                        </span>
+                    </div>
+                ))
+            }
+            <div>
+                <h3
+                    class="font-bold tracking-wide uppercase text-xs text-(--app-muted) h-min"
                 >
+                    Author{authors.length > 1 ? "s" : ""}
+                </h3>
+                <ul>
                     {
-                        (
-                            Object.entries(params) as [
-                                string,
-                                {
-                                    type: string;
-                                    default?: string | number | boolean;
-                                    options?: string[];
-                                },
-                            ][]
-                        ).map(([key, value]) => {
-                            const defaultValue = value.default ?? "";
-
-                            // TODO: handle more data types and options
-                            // TODO: handle enums
-
-                            return (
-                                <div class="mb-1">
-                                    <h3 class="font-bold tracking-wide uppercase text-xs text-(--app-muted)">
-                                        {key}
-                                    </h3>
-                                    {value.type === "string" ? (
-                                        <input
-                                            id={key}
-                                            type="text"
-                                            value={String(defaultValue)}
-                                            class="mt-1 w-full border border-(--app-border) bg-(--app-surface-strong) px-3 py-2 text-sm text-(--app-fg) focus:border-(--app-muted) focus:outline-none"
-                                        />
-                                    ) : (
-                                        <span class="text-sm text-(--app-muted-fg) italic">
-                                            Unsupported parameter type:{" "}
-                                            {value.type}
-                                        </span>
-                                    )}
-                                </div>
-                            );
-                        })
+                        authors.map((author: AuthorData) => (
+                            <li>
+                                {author.ref ? (
+                                    <a
+                                        href={author.ref}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        class="text-(--app-fg) hover:underline text-sm"
+                                    >
+                                        {author.name}
+                                    </a>
+                                ) : (
+                                    <span class="text-(--app-fg) text-sm">
+                                        {author.name}
+                                    </span>
+                                )}
+                            </li>
+                        ))
                     }
-                </div>
+                </ul>
             </div>
-
-            <section class="h-min space-y-3 align-middle sm:space-y-4">
-                <main
-                    class="border border-(--app-border) bg-(--app-surface-strong)"
-                >
-                    <SignRenderer
-                        signTitle={type}
-                        signSource={sourceCode}
-                        signParams={params}
-                        signFonts={fonts}
-                        signAssets={assets}
-                        client:only="svelte"
-                    />
-                </main>
-
-                <div class="grid grid-cols-1 gap-4">
-                    <aside
-                        class="border border-(--app-border) bg-(--app-surface-strong) p-4 sm:p-6"
-                    >
-                        <div class="flex flex-col gap-6 sm:flex-row sm:gap-12">
-                            <section class="flex-1">
-                                <h2
-                                    class="text-xs font-bold uppercase tracking-widest text-(--app-muted)"
-                                >
-                                    Metadata
-                                </h2>
-                                <dl class="mt-4 space-y-4 text-sm">
-                                    <div>
-                                        <dt
-                                            class="text-[10px] uppercase font-medium text-(--app-muted-fg)"
-                                        >
-                                            Published
-                                        </dt>
-                                        <dd
-                                            class="mt-0.5 font-medium text-(--app-fg)"
-                                        >
-                                            {
-                                                new Date(
-                                                    published,
-                                                ).toLocaleDateString()
-                                            }
-                                        </dd>
-                                    </div>
-                                    <div>
-                                        <dt
-                                            class="text-[10px] uppercase font-medium text-(--app-muted-fg)"
-                                        >
-                                            Last Updated
-                                        </dt>
-                                        <dd
-                                            class="mt-0.5 font-medium text-(--app-fg)"
-                                        >
-                                            {
-                                                new Date(
-                                                    lastUpdated,
-                                                ).toLocaleDateString()
-                                            }
-                                        </dd>
-                                    </div>
-                                </dl>
-                            </section>
-
-                            <section class="flex-1">
-                                <h2
-                                    class="text-xs font-bold uppercase tracking-widest text-(--app-muted)"
-                                >
-                                    Authors
-                                </h2>
-                                <div class="mt-4">
-                                    {
-                                        authors.length > 0 ? (
-                                            <ul class="space-y-2">
-                                                {authors.map(
-                                                    (author: {
-                                                        name: string;
-                                                        ref?: string;
-                                                    }) => (
-                                                        <li>
-                                                            {author.ref ? (
-                                                                /* Link Version */
-                                                                <a
-                                                                    href={
-                                                                        author.ref
-                                                                    }
-                                                                    target="_blank"
-                                                                    rel="noopener noreferrer"
-                                                                    class="inline-flex items-center text-sm font-medium underline underline-offset-4 text-(--app-fg) transition-colors hover:text-(--app-muted)"
-                                                                >
-                                                                    {
-                                                                        author.name
-                                                                    }
-                                                                </a>
-                                                            ) : (
-                                                                /* Text Version */
-                                                                <span class="text-sm font-medium text-(--app-fg)">
-                                                                    {
-                                                                        author.name
-                                                                    }
-                                                                </span>
-                                                            )}
-                                                        </li>
-                                                    ),
-                                                )}
-                                            </ul>
-                                        ) : (
-                                            <p class="text-sm text-(--app-muted-fg) italic">
-                                                No author metadata.
-                                            </p>
-                                        )
-                                    }
-                                </div>
-                            </section>
-                        </div>
-                    </aside>
-                </div>
-            </section>
-        </div>
-    </section>
+        </SimpleBox>
+    </div>
 </Layout>

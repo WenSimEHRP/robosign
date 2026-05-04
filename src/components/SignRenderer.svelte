@@ -14,11 +14,13 @@
     const rendererWasmUrl =
         "https://unpkg.com/@myriaddreamin/typst-ts-renderer@0.7.0-rc2/pkg/typst_ts_renderer_bg.wasm";
     import { resolveFontFiles } from "../utils/FontMap";
+    import { resolveParamIds, type RenderParam } from "../utils/Params";
 
     export let signTitle: string;
     export let signSource: string;
     export let signAssets: Record<string, string> = {};
-    export let signParams: Record<string, any>;
+    export let signParams: Record<string, RenderParam>;
+    let signParamIds: string[] = resolveParamIds(signParams);
     export let signFonts: string[] = [];
 
     const fontPaths = import.meta.glob("/public/fonts/*.{otf,ttf}", {
@@ -39,55 +41,49 @@
     let lastExportPdfData: Uint8Array<ArrayBufferLike> | null = null;
     let exportTypst: TypstSnippet | null = null;
 
-    type ParamSpec = {
-        type: string;
-        default?: unknown;
-    };
+    function isVisibleElement(element: Element) {
+        for (let current: Element | null = element; current; current = current.parentElement) {
+            if (current.hasAttribute("hidden")) {
+                return false;
+            }
+
+            const styles = getComputedStyle(current);
+            if (styles.display === "none" || styles.visibility === "hidden" || styles.visibility === "collapse") {
+                return false;
+            }
+        }
+
+        return true;
+    }
 
     function readParamsFromDom() {
-        const params: Record<string, unknown> = {};
+        const params: Record<string, string | null> = {};
 
-        for (const [key, value] of Object.entries(signParams ?? {})) {
+        for (const key of signParamIds) {
             const element = document.getElementById(key);
-            const spec = value as ParamSpec;
-
-            if (!element) {
-                params[key] = spec.default ?? "";
-                continue;
-            }
 
             if (
-                element instanceof HTMLInputElement &&
-                spec.type === "boolean"
+                element instanceof HTMLInputElement ||
+                element instanceof HTMLSelectElement ||
+                element instanceof HTMLTextAreaElement
             ) {
-                params[key] = element.checked;
+                if (element instanceof HTMLInputElement && element.type === "radio") {
+                    continue;
+                }
+
+                if (isVisibleElement(element)) {
+                    params[key] = element.value;
+                }
                 continue;
             }
 
-            if (element instanceof HTMLInputElement && spec.type === "number") {
-                params[key] =
-                    element.value === ""
-                        ? (spec.default ?? "")
-                        : Number(element.value);
-                continue;
-            }
+            const selectedRadio = document.querySelector<HTMLInputElement>(
+                `input[name="${CSS.escape(key)}"]:checked`,
+            );
 
-            if (element instanceof HTMLSelectElement) {
-                params[key] = element.value;
-                continue;
+            if (selectedRadio && isVisibleElement(selectedRadio)) {
+                params[`${key}::${selectedRadio.value}`] = null;
             }
-
-            if (element instanceof HTMLTextAreaElement) {
-                params[key] = element.value;
-                continue;
-            }
-
-            if (element instanceof HTMLInputElement) {
-                params[key] = element.value;
-                continue;
-            }
-
-            params[key] = spec.default ?? "";
         }
 
         return params;
@@ -375,28 +371,12 @@
                 initialized = true;
                 queueRender();
 
-                const elements = Object.keys(signParams ?? {})
-                    .map((key) => document.getElementById(key))
-                    .filter(
-                        (
-                            element,
-                        ): element is
-                            | HTMLInputElement
-                            | HTMLSelectElement
-                            | HTMLTextAreaElement =>
-                            element instanceof HTMLInputElement ||
-                            element instanceof HTMLSelectElement ||
-                            element instanceof HTMLTextAreaElement,
-                    );
-
-                for (const element of elements) {
-                    element.addEventListener("input", queueRender);
-                    element.addEventListener("change", queueRender);
-                    cleanup.push(() => {
-                        element.removeEventListener("input", queueRender);
-                        element.removeEventListener("change", queueRender);
-                    });
-                }
+                document.addEventListener("input", queueRender, true);
+                document.addEventListener("change", queueRender, true);
+                cleanup.push(() => {
+                    document.removeEventListener("input", queueRender, true);
+                    document.removeEventListener("change", queueRender, true);
+                });
             } catch (err) {
                 console.error(err);
                 error = (err as Error).message;
@@ -418,7 +398,7 @@
 
 <div class="flex w-full flex-col items-center justify-center bg-(--app-surface-strong) text-(--app-fg)">
     <div
-        class="sticky top-0 z-20 flex w-full flex-col gap-2 border-b border-(--app-border) bg-(--app-surface) px-3 py-3 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-2"
+        class="flex w-full flex-col gap-2 border-b border-(--app-border) bg-(--app-surface) px-3 py-3 backdrop-blur-sm sm:flex-row sm:items-center sm:justify-between sm:px-6 sm:py-2"
     >
         <div
             class="text-center text-xs font-semibold uppercase tracking-[0.22em] text-(--app-muted-fg) sm:text-left"

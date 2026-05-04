@@ -1,0 +1,9 @@
+---
+import "../styles/global.css";
+
+const { class: className = "" } = Astro.props;
+---
+
+<div class={`${className} border border-(--app-border) bg-(--app-surface-strong)`}>
+    <slot />
+</div>

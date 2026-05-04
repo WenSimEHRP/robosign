@@ -1,0 +1,88 @@
+---
+import NestedParamField from "./ParamField.astro";
+import { type RenderParam } from "../utils/Params.ts";
+
+interface Props {
+    params: Record<string, RenderParam>;
+    parentKey?: string;
+}
+
+const { params = {}, parentKey = "" } = Astro.props;
+
+const fieldClasses =
+    "mt-1 w-full border border-(--app-border) bg-(--app-surface-strong) px-3 py-2 text-sm text-(--app-fg) focus:border-(--app-muted) focus:outline-none";
+---
+
+{
+    Object.entries(params).map(([paramKey, value]) => {
+        const variations = value.variations ?? {};
+
+        return (
+            <div>
+                <h3 class="font-bold tracking-wide uppercase text-xs text-(--app-muted)">
+                    {paramKey}
+                </h3>
+
+                {value.type === "string" && (
+                    <input
+                        id={parentKey + paramKey}
+                        type="text"
+                        value={String(value.default ?? "")}
+                        class={fieldClasses}
+                    />
+                )}
+
+                {value.type === "enum" && value.variations && (
+                    <div class="mt-1 flex flex-col gap-2">
+                        {Object.entries(variations).map(
+                            ([variationKey, extraParams]) => {
+                                const groupName = parentKey + paramKey;
+                                const defaultVariationKey = Array.isArray(
+                                    (value as any).default,
+                                )
+                                    ? (value as any).default[0]
+                                    : value.default;
+                                const extraParamsObj = extraParams ?? {};
+
+                                return (
+                                    <div class="border border-(--app-border) p-2">
+                                        <label class="grid grid-cols-[auto_1fr] gap-2">
+                                            <input
+                                                type="radio"
+                                                name={groupName}
+                                                value={variationKey}
+                                                checked={
+                                                    defaultVariationKey ===
+                                                    variationKey
+                                                }
+                                                class="peer"
+                                            />
+                                            <span class="font-medium text-sm">
+                                                {variationKey}
+                                            </span>
+                                            {Object.keys(extraParamsObj)
+                                                .length > 0 && (
+                                                <div class="col-span-2 flex-col gap-2 hidden peer-checked:flex">
+                                                    <NestedParamField
+                                                        params={extraParamsObj}
+                                                        parentKey={
+                                                            parentKey +
+                                                            paramKey +
+                                                            "::" +
+                                                            variationKey +
+                                                            "::"
+                                                        }
+                                                    />
+                                                </div>
+                                            )}
+                                        </label>
+                                    </div>
+                                );
+                            },
+                        )}
+                    </div>
+                )}
+            </div>
+        );
+    })
+}
