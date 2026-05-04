@@ -4,7 +4,7 @@
     default: (
       simple: (
         station-names: "阿鲁科尔沁旗;齐齐哈尔",
-        departure-station-pinyin: "TOO LONG TO FIT IN",
+        station-pinyin: "ALUKEERQINQI;QIQIHAER",
       ),
     ),
     variations: (
@@ -13,9 +13,9 @@
           type: "string",
           default: "阿鲁科尔沁旗;齐齐哈尔",
         ),
-        departure-station-pinyin: (
+        station-pinyin: (
           type: "string",
-          default: "TOO LONG TO FIT IN",
+          default: "ALUKEERQINQI;QIQIHAER",
         ),
       ),
       complex: (
@@ -23,9 +23,17 @@
           type: "string",
           default: "红魔馆",
         ),
+        station-pinyin-1: (
+          type: "string",
+          default: "HONG MO GUAN",
+        ),
         station-name-2: (
           type: "string",
           default: "嬴异人",
+        ),
+        station-pinyin-2: (
+          type: "string",
+          default: "YING YI REN",
         ),
         class: (
           type: "string",
@@ -47,7 +55,9 @@
     default: (
       complex: (
         station-name-1: "温州;永嘉",
+        station-pinyin-1: "WEN ZHOU;YONG JIA",
         station-name-2: "都灵;米兰",
+        station-pinyin-2: "TURIN;MILAN",
         class: "高速",
         trips-top: "G1234",
         trips-bottom: "G1235",
@@ -57,11 +67,11 @@
       simple: (
         station-names: (
           type: "string",
-          default: "北京北;太平洋中央车站",
+          default: "太平洋中央",
         ),
-        departure-station-pinyin: (
+        station-pinyin: (
           type: "string",
-          default: "TOO LONG TO FIT IN",
+          default: "PACIFIC CENTRAL",
         ),
       ),
       complex: (
@@ -69,9 +79,17 @@
           type: "string",
           default: "温州;永嘉",
         ),
+        station-pinyin-1: (
+          type: "string",
+          default: "WEN ZHOU;YONG JIA",
+        ),
         station-name-2: (
           type: "string",
           default: "都灵;米兰",
+        ),
+        station-pinyin-2: (
+          type: "string",
+          default: "TURIN;MILAN",
         ),
         class: (
           type: "string",
@@ -94,7 +112,7 @@
   ),
   trips: (
     type: "string",
-    default: "DJ1145 1919/20 6767 6969",
+    default: "DJ1145;1919/20;6767;6969",
   ),
   color: (
     type: "string",
@@ -157,29 +175,30 @@
 #let serif-text = text.with(font: "Noto Serif SC")
 #let sans-text = text.with(font: "Noto Sans CJK SC")
 
-#let format-text(station-names) = context {
+#let format-text(
+  station-names,
+  text-fn: serif-text.with(size: 2.8cm, weight: "black"),
+  insert-space: true,
+  vertical-compress: true,
+  max-line-hight: 999cm,
+) = context {
   let stations = station-names.split(";")
   grid(
     rows: (1fr,) * stations.len(),
     ..stations.map(it => layout(size => {
-      let u = measure(serif-text(
-        size: 2.8cm,
-        weight: "black",
-        it,
-      ))
+      let text-fn = if vertical-compress { text-fn } else {
+        text-fn.with(size: calc.min(size.height, max-line-hight))
+      }
+      let u = measure(text-fn(it))
       scale(
         reflow: true,
         x: calc.min(100%, size.width / u.width * 100%),
-        y: 100% / stations.len(),
-        it
-          .clusters()
-          .map(char => serif-text(
-            size: 2.8cm,
-            weight: "black",
-            char,
-          ))
-          .intersperse(h(1fr))
-          .join(),
+        y: if vertical-compress { 100% / stations.len() } else { 100% },
+        if insert-space {
+          text-fn(it.clusters().intersperse(h(1fr)).join())
+        } else {
+          text-fn(it)
+        },
       )
     }))
   )
@@ -198,10 +217,13 @@
           grid.cell(inset: .7cm)[
             #align(
               center + horizon,
-              move(dy: .5cm, box(width: 2.5cm, stroke: 3pt, {
-                place(center + bottom, dy: -.2cm, sans-text(lang: "en", size: .5cm, s.complex.trips-top))
-                place(center + top, dy: .2cm, sans-text(lang: "en", size: .5cm, s.complex.trips-bottom))
-              })),
+              move(dy: .5cm, grid(
+                rows: 2,
+                inset: .2cm,
+                stroke: (x, y) => if y == 0 { (bottom: 3pt) } else { none },
+                sans-text(lang: "en", size: .5cm, s.complex.trips-top),
+                sans-text(lang: "en", size: .5cm, s.complex.trips-bottom),
+              )),
             )
             #place(center + top, dy: -.4cm, scale(reflow: true, y: 80%, box(width: 999em, sans-text(
               size: 0.8cm,
@@ -215,15 +237,27 @@
         place(center + bottom, dy: -.4cm, box(height: 3cm, width: 9cm, format-text(s.simple.station-names)))
       }
     },
-    grid.cell(align: center + horizon, fill: eval(params.color), {
-      if s.at("simple", default: none) == none {} else {
-        serif-text(
+    grid.cell(align: center + horizon, fill: eval(params.color), inset: .1cm, {
+      let format-fn = format-text.with(
+        text-fn: serif-text.with(
           weight: "black",
           size: 1cm,
           fill: white,
           lang: "en",
-          s.simple.departure-station-pinyin,
+        ),
+        insert-space: false,
+        vertical-compress: false,
+        max-line-hight: 1cm,
+      )
+      if s.at("simple", default: none) == none {
+        grid(
+          columns: (auto, 3cm, auto),
+          grid.cell(align: left, format-fn(s.complex.station-pinyin-1)),
+          [],
+          grid.cell(align: right, format-fn(s.complex.station-pinyin-2)),
         )
+      } else {
+        format-fn(s.simple.station-pinyin)
       }
     }),
     [],
@@ -250,7 +284,7 @@
       params.class,
     )))
     place(center + top, dy: .5cm, rect(stroke: none, width: 4cm, inset: 0cm, image("./logo.svg")))
-    let trip-numbers = params.trips.trim().split(regex("\s+"))
+    let trip-numbers = params.trips.trim().split(";")
     place(center + bottom, dy: -.2cm, box(
       width: 6cm,
       {
