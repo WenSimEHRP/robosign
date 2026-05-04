@@ -3,7 +3,7 @@
     type: "enum",
     default: (
       simple: (
-        station-names: "阿鲁科尔沁旗 齐齐哈尔",
+        station-names: "阿鲁科尔沁旗;齐齐哈尔",
         departure-station-pinyin: "TOO LONG TO FIT IN",
       ),
     ),
@@ -11,7 +11,7 @@
       simple: (
         station-names: (
           type: "string",
-          default: "阿鲁科尔沁旗 齐齐哈尔",
+          default: "阿鲁科尔沁旗;齐齐哈尔",
         ),
         departure-station-pinyin: (
           type: "string",
@@ -21,11 +21,11 @@
       complex: (
         station-name-1: (
           type: "string",
-          default: "温州",
+          default: "红魔馆",
         ),
         station-name-2: (
           type: "string",
-          default: "都灵",
+          default: "嬴异人",
         ),
         class: (
           type: "string",
@@ -46,8 +46,8 @@
     type: "enum",
     default: (
       complex: (
-        station-name-1: "温州",
-        station-name-2: "都灵",
+        station-name-1: "温州;永嘉",
+        station-name-2: "都灵;米兰",
         class: "高速",
         trips-top: "G1234",
         trips-bottom: "G1235",
@@ -57,7 +57,7 @@
       simple: (
         station-names: (
           type: "string",
-          default: "北京北 太平洋中央车站",
+          default: "北京北;太平洋中央车站",
         ),
         departure-station-pinyin: (
           type: "string",
@@ -67,11 +67,11 @@
       complex: (
         station-name-1: (
           type: "string",
-          default: "温州",
+          default: "温州;永嘉",
         ),
         station-name-2: (
           type: "string",
-          default: "都灵",
+          default: "都灵;米兰",
         ),
         class: (
           type: "string",
@@ -152,11 +152,13 @@
   margin: 0cm,
 )
 
+#set text(lang: "zh")
+#show text.where(lang: "zh"): set text(bottom-edge: "descender", baseline: .2cm)
 #let serif-text = text.with(font: "Noto Serif SC")
 #let sans-text = text.with(font: "Noto Sans CJK SC")
 
 #let format-text(station-names) = context {
-  let stations = station-names.split(regex("\s+"))
+  let stations = station-names.split(";")
   grid(
     rows: (1fr,) * stations.len(),
     ..stations.map(it => layout(size => {
@@ -189,29 +191,28 @@
     rows: (1fr, 1.5cm, 4.4mm),
     {
       if s.at("simple", default: none) == none {
-        let info = s.complex
         grid(
           rows: 1fr,
           columns: (1fr, auto, 1fr),
-          place(center + bottom, dy: -.6cm, format-text(s.complex.station-name-1)),
+          place(center + bottom, dy: -.4cm, box(height: 3cm, format-text(s.complex.station-name-1))),
           grid.cell(inset: .7cm)[
             #align(
               center + horizon,
               move(dy: .5cm, box(width: 2.5cm, stroke: 3pt, {
-                place(center + bottom, dy: -.2cm, sans-text(size: .5cm, s.complex.trips-top))
-                place(center + top, dy: .2cm, sans-text(size: .5cm, s.complex.trips-bottom))
+                place(center + bottom, dy: -.2cm, sans-text(lang: "en", size: .5cm, s.complex.trips-top))
+                place(center + top, dy: .2cm, sans-text(lang: "en", size: .5cm, s.complex.trips-bottom))
               })),
             )
-            #place(center + top, dy: .1cm, scale(reflow: true, y: 80%, box(width: 999em, sans-text(
+            #place(center + top, dy: -.4cm, scale(reflow: true, y: 80%, box(width: 999em, sans-text(
               size: 0.8cm,
               tracking: .7cm,
-              params.class,
+              s.complex.class,
             ))))
           ],
-          place(center + bottom, dy: -.6cm, format-text(s.complex.station-name-2)),
+          place(center + bottom, dy: -.4cm, box(height: 3cm, format-text(s.complex.station-name-2))),
         )
       } else {
-        place(center + bottom, dy: -.6cm, box(height: 3cm, width: 9cm, format-text(s.simple.station-names)))
+        place(center + bottom, dy: -.4cm, box(height: 3cm, width: 9cm, format-text(s.simple.station-names)))
       }
     },
     grid.cell(align: center + horizon, fill: eval(params.color), {
@@ -220,6 +221,7 @@
           weight: "black",
           size: 1cm,
           fill: white,
+          lang: "en",
           s.simple.departure-station-pinyin,
         )
       }
@@ -242,7 +244,7 @@
   rows: (6cm,),
   station-text(params.field-1),
   {
-    place(center + top, dy: .5cm, scale(y: 80%, sans-text(
+    place(center + top, dy: .3cm, scale(y: 80%, sans-text(
       size: 1.1cm,
       tracking: 3.8cm,
       params.class,
