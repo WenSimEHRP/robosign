@@ -35,13 +35,8 @@ const fieldClasses =
                 {value.type === "enum" && value.variations && (
                     <div class="mt-1 flex flex-col gap-2">
                         {Object.entries(variations).map(
-                            ([variationKey, extraParams]) => {
+                            ([variationKey, extraParams], idx) => {
                                 const groupName = parentKey + paramKey;
-                                const defaultVariationKey = Array.isArray(
-                                    (value as any).default,
-                                )
-                                    ? (value as any).default[0]
-                                    : value.default;
                                 const extraParamsObj = extraParams ?? {};
 
                                 return (
@@ -51,10 +46,7 @@ const fieldClasses =
                                                 type="radio"
                                                 name={groupName}
                                                 value={variationKey}
-                                                checked={
-                                                    defaultVariationKey ===
-                                                    variationKey
-                                                }
+                                                checked={idx === 0}
                                                 class="peer"
                                             />
                                             <span class="font-medium text-sm">
