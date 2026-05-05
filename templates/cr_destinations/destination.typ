@@ -285,13 +285,14 @@
     )))
     place(center + top, dy: .5cm, rect(stroke: none, width: 4cm, inset: 0cm, image("./logo.svg")))
     let trip-numbers = params.trips.trim().split(";")
-    place(center + bottom, dy: -.2cm, box(
+    place(center + top, dy: 4.7cm, box(
       width: 6cm,
+      stroke: 1pt,
       {
-        set align(center)
+        set align(center + top)
         set par(leading: 2mm)
         trip-numbers
-          .map(it => box(scale(reflow: true, y: 80%, sans-text(size: .7cm, it))))
+          .map(it => box(scale(reflow: true, y: 80%, sans-text(lang: "en", size: .7cm, it))))
           .intersperse(h(.8em, weak: true))
           .join()
       },
