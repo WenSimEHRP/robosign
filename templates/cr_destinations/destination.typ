@@ -118,6 +118,24 @@
     type: "string",
     default: "rgb(\"#DBB44B\")",
   ),
+  logo-colors: (
+    type: "enum",
+    // default: (default: none),
+    default: (default: none),
+    variations: (
+      default: none,
+      simple: (
+        background: (
+          type: "string",
+          default: "#000000",
+        ),
+        foreground: (
+          type: "string",
+          default: "#FFF954",
+        ),
+      ),
+    ),
+  ),
 )
 
 #metadata((
@@ -283,11 +301,17 @@
       tracking: 3.8cm,
       params.class,
     )))
-    place(center + top, dy: .5cm, rect(stroke: none, width: 4cm, inset: 0cm, image("./logo.svg")))
+    place(center + top, dy: .5cm, rect(stroke: none, width: 4cm, inset: 0cm, {
+      let svg-str = read("logo.svg")
+      if params.logo-colors.at("simple", default: none) != none {
+        svg-str = svg-str.replace("#293965", params.logo-colors.simple.background)
+        svg-str = svg-str.replace("#f68323", params.logo-colors.simple.foreground)
+      }
+      image(bytes(svg-str), format: "svg")
+    }))
     let trip-numbers = params.trips.trim().split(";")
     place(center + top, dy: 4.7cm, box(
       width: 6cm,
-      stroke: 1pt,
       {
         set align(center + top)
         set par(leading: 2mm)
